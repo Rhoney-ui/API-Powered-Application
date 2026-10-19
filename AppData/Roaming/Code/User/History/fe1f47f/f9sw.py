@@ -1,0 +1,149 @@
+# Building a Live Data Script 
+# The Four-Part Structure - Configuration, Fetch, Process, Output
+
+# PART 1: Configuration
+# CONFIGURATION BLOCK
+
+import os
+
+# Configuration
+BASE_URL = "https://api.smptracker.com/v1"
+API_KEY = os.environ.get("SMP_API_KEY", "demo_key_123")
+DEFAULT_CITY = "Nairobi"
+STEP_GOAL = 10000
+MAX_RESULTS = 50
+
+print()
+print("=== CONFIGURATION BLOCK ===")
+print()
+
+print("Configuration loaded:")
+print(f" Base URL: {BASE_URL}")
+print(f" API key: {API_KEY[:8]}...")
+print(f" City: {DEFAULT_CITY}")
+print(f" Step Goal: {STEP_GOAL:,}")
+print(f" Max Results: {MAX_RESULTS}")
+
+# PART 2: Fetch Function
+# FETCH FUNCTION PATTERN
+
+# Simulate what a fetch function does in a script
+
+print()
+print("=== FETCH FUNCTION PATTERN ===")
+print()
+def fetch_members(city="Nairobi",limit=50):
+    """
+    Fetches member data from the SMP API.
+    Returns a list of member dicts or raises RuntimeError.
+    In production: uses requests.get() with headers and params.
+    """
+    # Simulate the API response
+    mock_response_status = 200
+    mock_data = [
+        {"id": 1, "name": "James Omondi", "city": "Nairobi", "steps": 9200, "protocol": "OMAD"},
+        {"id": 2, "name": "Sandra weru", "city": "Nairobi", "steps": 10500, "protocol": "2MAD"},
+        {"id": 3, "name": "Patrick Njiru", "city": "Mombasa", "steps": 8100, "protocol": "OMAD"},
+        {"id": 4, "name": "Grace Achieng", "city": "Nairobi", "steps": 11000, "protocol": "OMAD"},
+        {"id": 5, "name": "Brian Kamau", "city": "Kisumu", "steps": 7400, "protocol": "2MAD"},
+        {"id": 6, "name": "Kevin Mwangi", "city": "Nairobi", "steps": 10800, "protocol": "OMAD"},
+    ]
+
+    if mock_response_status != 200:
+        raise RuntimeError(f"API error: status{mock_response_status}")
+    
+    # Filter by city
+    filtered = [m for m in mock_data if m["city"] == city] 
+    return filtered[:limit]
+    
+# Call the function
+members = fetch_members(city="Nairobi")
+print(f"Fetched {len(members)} members from Nairobi")
+for m in members:
+    print(f" {m['name']}: {m['steps']} steps")
+
+# PART 3: Processing Function
+# PROCESSING FUNCTION
+
+print()
+print("=== PROCESSING FUNCTION ===")
+print()
+
+def process_members(members, step_goal=10000):
+    """
+    Takes a list of raw member records.
+    Returns a summary dict with stats and categorized members.
+    """
+    if not members:
+        return{"error": "No members to process"}
+
+    total = len(members)
+    goal_met = [m for m in members if m["steps"] >= step_goal]
+    goal_missed = [m for m in members if m["steps"] < step_goal]
+    avg_steps = round(sum(m["steps"] for m in members) / total)
+    top_performer = max(members, key=lambda m: m["steps"])
+
+    return {
+        "total_members": total,
+        "goal_met_count": len(goal_met),
+        "goal_missed_count": len(goal_missed),
+        "average_steps": avg_steps,
+        "top_performer": top_performer["name"],
+        "top_steps": top_performer["steps"],
+        "goal_met": [m["name"] for m in goal_met],
+    }
+
+# Test with sample data 
+raw_members = [
+    {"name": "James Omondi", "steps": 9200, "protocol": "OMAD"},
+    {"name": "Sandra Weru", "steps": 10500, "protocol": "2MAD"},
+    {"name": "Grace Achieng", "steps": 11000, "protocol": "OMAD"},
+    {"name": "Brian Kamau", "steps": 7400, "protocol": "2MAD"},
+    {"name": "Kevin Mwangi", "steps": 10800, "protocol": "OMAD"},
+]
+
+summary = process_members(raw_members, step_goal=10000)
+print("Processed summary:")
+for key, value in summary.items():
+    print(f" {key}: {value}")
+
+# PART 4: Output
+# OUTPUT FUNCTION
+
+import json
+
+print()
+print("=== OUTPUT FUNCTION ===")
+print()
+
+def print_report(summary, city="Nairobi"):
+    print("=" * 48)
+    print(f" SMP MEMBER REPORT: {city.upper()}")
+    print("=" * 48)
+    print(f" Total members: {summary['total_members']}")
+    print(f" Hit step goal: {summary['goal_met_count']}")
+    print(f" Missed goal: {summary['goal_missed_count']}")
+    print(f" Average steps: {summary['average_steps']:,}")
+    print(f" Top performer: {summary['top_performer']} ({summary['top_steps']:,} steps)")
+    print("-" * 48)
+    print(" Members who hit goal:")
+    for name in summary["goal_met"]:
+        print(f" {name}")
+        print("=" * 48)
+
+summary = {
+    "total_members": 5,
+    "goal_met_count": 3,
+    "goal_missed_count": 2,
+    "average_steps": 9780,
+    "top_performer": "Grace Achieng",
+    "top_steps": 11000,
+    "goal_met": ["Sandra Weru", "Grace Achieng", "Kevin Mwangi"]
+}
+
+print_report(summary, city="Nairobi")
+
+# Save to JSON
+output = json.dumps(summary,indent=2)
+print("\nJSON output saved:")
+print(output)
