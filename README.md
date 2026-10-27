@@ -1,5 +1,5 @@
 # API-Powered-Application
-Shows current weather for any city using the OpenWeatherMap API.
+Shows a 3 day weather forecast for any city using the OpenWeatherMap API.
 
 ## Setup
 
